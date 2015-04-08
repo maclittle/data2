@@ -19,19 +19,16 @@ public interface Bag<D extends Comparable<D>> {
     boolean member(D elt);
     
     //Returns a Bag containing elt and everything in t
-    Bag<D> addOne(D elt);
+    Bag<D> add(D elt);
     
     // Returns a Bag containing elt added count times
-    Bag<D> addMany(D elt, int count);
+    Bag<D> add(D elt, int count);
     
     //Returns a Bag containing everything in t except one instance of elt
-    Bag<D> removeOne(D elt);
+    Bag<D> remove(D elt);
     
     // Returns a Bag with elt removed count times
-    Bag<D> removeMany(D elt, int count);
-    
-    // Returns a Bag with all instances of elt removed
-    Bag<D> removeAll(D elt);
+    Bag<D> remove(D elt, int count);
     
     //Returns a Bag containing everything in t and u
     Bag<D> union(Bag<D> u);

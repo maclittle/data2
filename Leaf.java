@@ -28,25 +28,19 @@ public class Leaf<D extends Comparable<D>> implements Bag<D> {
         return false;
     }
     
-    public Bag<D> addOne(D elt){
-        return new Branch(this, elt, this);
+    public Bag<D> add(D elt){
+        return new Branch<D>(this, elt, 1, this);
     }
     
-    public Bag<D> addMany(D elt, int count){
-        for (int i=0; i<count; i++){
-            this.addOne(elt);
-        } return this;
+    public Bag<D> add(D elt, int count){
+        return new Branch<D>(this, elt, count, this);
     }
     
-    public Bag<D> removeOne(D elt){
+    public Bag<D> remove(D elt){
         return new Leaf();
     }
     
-    public Bag<D> removeMany(D elt, int count){
-        return new Leaf();
-    }
-    
-    public Bag<D> removeAll(D elt){
+    public Bag<D> remove(D elt, int count){
         return new Leaf();
     }
     
@@ -68,4 +62,5 @@ public class Leaf<D extends Comparable<D>> implements Bag<D> {
     
     public boolean subset(Bag<D> u){
         return true;
+    }
 }
