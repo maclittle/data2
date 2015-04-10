@@ -1,6 +1,6 @@
 package data2;
 
-public class Branch<D extends Comparable<D>> implements Bag<D> {
+public class Branch<D extends Comparable<D>> implements Bag<D>, Sequence<D> {
 
     Bag<D> left;
     D key;
@@ -33,7 +33,7 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
     }
 
     /**
-     * @return the number of elements in the Bag
+     * @return the number of total elements in the Bag
      */
     public int cardinality() {
         return this.left.cardinality() + this.mult + this.right.cardinality();
@@ -53,7 +53,7 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
     public int multiplicity(D elt) {
         if (this.key.compareTo(elt) == 0) {
             return this.mult;
-        } else if (this.key.compareTo(elt)>0){
+        } else if (this.key.compareTo(elt) > 0) {
             return this.left.multiplicity(elt);
         } else {
             return this.right.multiplicity(elt);
@@ -80,13 +80,14 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
      */
     public Bag<D> add(D elt) {
         if (this.key.compareTo(elt) == 0) {
-            return new Branch<D>(this.left, this.key, this.mult + 1, this.right);
+            return new Branch<D>(this.left, this.key,
+                    this.mult + 1, this.right);
         } else if (this.key.compareTo(elt) > 0) {
             return new Branch<D>(this.left.add(elt), this.key,
-                    this.mult, this.right);
+                    this.mult, this.right).balance();
         } else {
             return new Branch<D>(this.left, this.key, this.mult,
-                    this.right.add(elt));
+                    this.right.add(elt)).balance();
         }
     }
 
@@ -97,13 +98,14 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
      */
     public Bag<D> add(D elt, int count) {
         if (this.key.compareTo(elt) == 0) {
-            return new Branch<D>(this.left, this.key, this.mult + count, this.right);
+            return new Branch<D>(this.left, this.key,
+                    this.mult + count, this.right);
         } else if (this.key.compareTo(elt) > 0) {
             return new Branch<D>(this.left.add(elt, count), this.key,
-                    this.mult, this.right);
+                    this.mult, this.right).balance();
         } else {
             return new Branch<D>(this.left, this.key, this.mult,
-                    this.right.add(elt, count));
+                    this.right.add(elt, count)).balance();
         }
     }
 
@@ -121,10 +123,10 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
             }
         } else if (this.key.compareTo(elt) > 0) {
             return new Branch<D>(this.left.remove(elt), this.key,
-                    this.mult, this.right);
+                    this.mult, this.right).balance();
         } else {
             return new Branch<D>(this.left, this.key,
-                    this.mult, this.right.remove(elt));
+                    this.mult, this.right.remove(elt)).balance();
         }
     }
 
@@ -143,10 +145,10 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
             }
         } else if (this.key.compareTo(elt) > 0) {
             return new Branch<D>(this.left.remove(elt, count), this.key,
-                    this.mult, this.right);
+                    this.mult, this.right).balance();
         } else {
             return new Branch<D>(this.left, this.key,
-                    this.mult, this.right.remove(elt, count));
+                    this.mult, this.right.remove(elt, count)).balance();
         }
     }
 
@@ -168,7 +170,7 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
         } else {
             return new Branch<D>(this.left.inter(u), this.key,
                     Math.min(this.mult, u.multiplicity(this.key)),
-                    this.right.inter(u));
+                    this.right.inter(u)).balance();
         }
     }
 
@@ -177,7 +179,8 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
      * @return the Bag that is the difference of t and u
      */
     public Bag<D> diff(Bag<D> u) {
-        return (this.remove(this.key).diff(u.remove(this.key, this.mult)));
+        return (this.remove(this.key).diff
+        (u.remove(this.key, this.mult))).balance();
     }
 
     /**
@@ -194,9 +197,57 @@ public class Branch<D extends Comparable<D>> implements Bag<D> {
      * @return true if t is a subset of u, false otherwise
      */
     public boolean subset(Bag<D> u) {
-       return (u.multiplicity(this.key) >= (this.mult))
-			&& this.left.subset(u)
-			&& this.right.subset(u);
+        return (u.multiplicity(this.key) >= (this.mult))
+                && this.left.subset(u)
+                && this.right.subset(u);
+    }
+
+    public Sequence<D> seq() {
+        return this;
+    }
+
+    public D here() {
+        return this.key;
+    }
+
+    public Sequence<D> next() {
+        return new SequencePair<D>(left.seq(), right.seq());
+    }
+
+    public int depth() {
+        return 1 + Math.max(this.left.depth(), this.right.depth());
+    }
+    
+    public Bag<D> leftRotation(){
+        Branch<D> rightOne = (Branch<D>) this.right;
+        return new Branch<D>(new Branch<D>(this.left, key, mult, rightOne.left),
+                key, mult, this.right);
+    }
+    
+    public Bag<D> rightRotation(){
+        Branch<D> leftOne = (Branch<D>) this.left;
+        return new Branch<D>(this.left, key, mult,
+        new Branch<D>(leftOne.right, key, mult, this.right));
+    }
+    
+    public Bag<D> balance(){
+        if (this.left.depth() - this.right.depth() >= 2){
+            if (this.left.depth() > this.right.depth()){
+                return this.leftRotation();
+            } else{
+                return new Branch<D>(this.left.leftRotation(), key,
+                        mult, this.right).rightRotation();
+            }
+        } else if (this.right.depth() - this.left.depth() >= 2){
+            if (this.right.depth() > this.left.depth()){
+                return this.rightRotation();
+            } else {
+                return new Branch<D>(this.left, key,
+                        mult, this.right.rightRotation()).leftRotation();
+            }
+        } else {
+            return this;
+        }
     }
 
 }

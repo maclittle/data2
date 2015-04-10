@@ -1,7 +1,7 @@
 package data2;
 
 
-public interface Bag<D extends Comparable<D>> {
+public interface Bag<D extends Comparable<D>> extends Sequenced<D> {
     
     //Returns a fresh empty Bag
     Bag<D> empty();
@@ -44,5 +44,13 @@ public interface Bag<D extends Comparable<D>> {
     
     //Determines if t is a subset of u
     boolean subset(Bag<D> u);
+    
+    int depth();
+    
+    public Bag<D> leftRotation();
+    
+    public Bag<D> rightRotation();
+        
+    public Bag<D> balance();
     
 }
